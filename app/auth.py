@@ -13,14 +13,15 @@ from app.database import get_db
 from fastapi.security import OAuth2PasswordBearer
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='Authorization')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="Authorization")
+
 
 # Verify JWT token
 def verify_password(plain_password: str, hashed_password: str):
     return pwd_context.verify(plain_password, hashed_password)
 
 
-# Hash the password
+# Hashing the password
 def hash_password(password: str):
     return pwd_context.hash(password)
 
@@ -29,7 +30,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 
 
-# Create JWT token function
+# Creating JWT token function
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
@@ -51,9 +52,14 @@ def decode_token(token: str):
         raise Exception
     return payload
 
+
 # Get Current User
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> models.User:
-    credentials_exception = HTTPException(401, "Could not validate credentials", {"WWW-Authenticate": "Bearer"})
+def get_current_user(
+    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+) -> models.User:
+    credentials_exception = HTTPException(
+        401, "Could not validate credentials", {"WWW-Authenticate": "Bearer"}
+    )
     try:
         payload = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=["HS256"])
         email: str = payload.get("sub")
@@ -65,6 +71,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if user is None:
         raise credentials_exception
     return user
+
 
 # Authorization Middleware
 class AuthMiddleware(BaseHTTPMiddleware):
